@@ -39,6 +39,7 @@ def readAscii(fpath,iskp):
     return onedim
 ###############################################################################
 dirin='D:/MyPaper/PhD04/Cases/ERA/FORCING/'
+picout='D:/MyPaper/PhD05/Pics/'
 Regions=["PRD","MLYR","NPC","NEC","WTP","ETP"]
 datestrs=['20120401' , '20100602' , '20100802' ,
          '20120706' , '20100703' , '20100603' ]
@@ -47,6 +48,9 @@ nn=249
 for i in range(0,n):
     area=Regions[i]
     datestr=datestrs[i]
+    iy=string.atoi(datestr[0:4])
+    im=string.atoi(datestr[4:6])
+    jd=string.atoi(datestr[6:8])
     fpath=dirin+area+'/'+area+'_'+datestr+'_031d_SHLH_ERA.43'
     iskp=0
     onedim=readAscii(fpath,iskp)
@@ -84,7 +88,69 @@ for i in range(0,n):
             outstr='%e '%alldatare[iv,it]
             fout.write(outstr)
         fout.write('\n')     
-            
-            
+    #
+    alldatare2=np.zeros(shape=(4,nn),dtype=float)
+    for iv in range(0,4):
+        for it in range(0,nn):
+            its=it-4
+            ite=it+4
+            if its<0:
+                its=0
+                ite=ite-its
+            if ite>nn:
+                its=its-(nn-ite)
+                ite=nn
+            tmp=0.
+            for j in range(its,ite):
+                tmp=tmp+alldata[iv,j]
+            alldatare2[iv,it]=tmp/9.
+    fpath=dirin+area+'/'+area+'_'+datestr+'_031d_SHLH_ERA_nodu2.43'
+    fout=open(fpath,'w')    
+    for it in range(0,nn):
+        for iv in range(0,4):
+            if iv>1:
+               alldatare2[iv,it]=alldata[iv,it] 
+            outstr='%e '%alldatare2[iv,it]
+            fout.write(outstr)
+        fout.write('\n')     
+    #######################################################################
+    datestart=datetime.datetime(iy,im,jd,0,0,0)
+    det=datetime.timedelta(hours=3)            
+    dateiso=[] 
+    xdate=[]                
+    for dt in range(0,nn):
+        dateiso.append(datestart+dt*det)           
+    for tm in dateiso:
+        xdate.append(datetime.datetime.strftime(tm,"%d/%b"))
+    xxx=range(0,nn)
+    charsize=16       
+    fig,(ax0,ax1,ax2) = plt.subplots(nrows=3,ncols=1,figsize=(18,6))
+    ax0.plot(xxx,alldata[0,:],'g',label='0')#[0:lcc-3])
+    #plt.axis([0, nn, -100, 500])  ## x axis  y axis
+    text1=r"($a$) Normal"
+    ax0.text(2,203,text1,fontsize=16)
+    ax0.set_xticks(range(0,nn,16))
+    xticklabels = [xdate[i] for i in range(0,nn,16)] 
+    ax0.set_xticklabels(xticklabels, size=charsize)
+    #
+    ax1.plot(xxx,alldatare[0,:],'g',label='1')#[0:lcc-3])
+    #plt.axis([0, nn, -100, 500])  ## x axis  y axis
+    text1=r"($b$) Day Mean"
+    ax1.text(2,203,text1,fontsize=16)
+    ax1.set_xticks(range(0,nn,16))
+    xticklabels = [xdate[i] for i in range(0,nn,16)] 
+    ax1.set_xticklabels(xticklabels, size=charsize)
+    #
+    ax2.plot(xxx,alldatare2[0,:],'g',label='0')#[0:lcc-3])
+    #plt.axis([0, nn, -100, 500])  ## x axis  y axis
+    text1=r"($c$) Moving average"
+    ax2.text(2,203,text1,fontsize=16)
+    ax2.set_xticks(range(0,nn,16))
+    xticklabels = [xdate[i] for i in range(0,nn,16)] 
+    ax2.set_xticklabels(xticklabels, size=charsize)
+    plt.show()                     
+    plt.savefig(picout+area+'_surface.png',dpi=300)          
+    plt.show()
+    plt.close()        
         
             
